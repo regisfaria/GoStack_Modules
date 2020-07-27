@@ -88,16 +88,16 @@ const Repository: React.FC = () => {
 
       <Issues>
         {issues.map(issue => (
-          // eslint-disable-next-line react/jsx-no-target-blank
-          <a key={issue.id} href={issue.html_url} target="_blank">
+          <a key={issue.id} href={issue.html_url} target="blank">
             <div>
               <strong>{issue.title}</strong>
-              <p>{issue.user}</p>
+              <p>{issue.user.login}</p>
             </div>
 
             <FiChevronRight size={20} />
           </a>
         ))}
+        ;
       </Issues>
     </>
   );
