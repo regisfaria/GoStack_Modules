@@ -24,14 +24,6 @@ class UsersRepository implements IUsersRepositories {
     return user;
   }
 
-  public async findByDate(date: Date): Promise<User | undefined> {
-    const findAppointment = await this.ormRepository.findOne({
-      where: { date },
-    });
-
-    return findAppointment;
-  }
-
   public async create(userData: ICreateUserDTO): Promise<User> {
     const user = this.ormRepository.create(userData);
 

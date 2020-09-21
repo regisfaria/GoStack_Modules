@@ -5,6 +5,8 @@ import { injectable, inject } from 'tsyringe';
 import uploadConfig from '@config/upload';
 import User from '@modules/users/infra/typeorm/entities/User';
 import AppError from '@shared/errors/AppError';
+
+import IStorageProvider from '@shared/container/providers/StorageProvider/models/IStorageProvider';
 import IUsersRepository from '../repositories/IUsersRepository';
 
 interface Request {
@@ -17,6 +19,9 @@ export default class UpdateUserAvatarServie {
   constructor(
     @inject('UsersRepository')
     private usersRepository: IUsersRepository,
+
+    @inject('StorageProvider')
+    private storageProvider: IStorageProvider,
   ) {}
 
   public async execute({ userId, imageFileName }: Request): Promise<User> {
@@ -28,15 +33,12 @@ export default class UpdateUserAvatarServie {
 
     // Delete old image
     if (user.image) {
-      const userImageFilePath = path.join(uploadConfig.directory, user.image);
-      const userImageFileExists = await fs.promises.stat(userImageFilePath);
-
-      if (userImageFileExists) {
-        await fs.promises.unlink(userImageFilePath);
-      }
+      await this.storageProvider.deleteFile(user.image);
     }
 
-    user.image = imageFileName;
+    const fileName = await this.storageProvider.saveFile(imageFileName);
+
+    user.image = fileName;
 
     await this.usersRepository.save(user);
 
