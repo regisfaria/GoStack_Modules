@@ -23,7 +23,7 @@ describe('UpdateProfile', () => {
       password: 'examplepass',
     });
 
-    const userProfile = await showProfile.execute(user.id);
+    const userProfile = await showProfile.execute({ userId: user.id });
 
     expect(userProfile.name).toBe('John Doe');
     expect(userProfile.email).toBe('johndoe@example.com');
@@ -31,7 +31,7 @@ describe('UpdateProfile', () => {
 
   it('should not be able to show the profile from a non-existing user', async () => {
     await expect(
-      showProfile.execute('non-existing-user-id'),
+      showProfile.execute({ userId: 'non-existing-user-id' }),
     ).rejects.toBeInstanceOf(AppError);
   });
 });

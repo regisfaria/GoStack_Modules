@@ -6,6 +6,9 @@ import User from '../infra/typeorm/entities/User';
 
 import IUsersRepository from '../repositories/IUsersRepository';
 
+interface IRequest {
+  userId: string;
+}
 @injectable()
 export default class ShowProfileService {
   constructor(
@@ -13,7 +16,7 @@ export default class ShowProfileService {
     private usersRepository: IUsersRepository,
   ) {}
 
-  public async execute(userId: string): Promise<User> {
+  public async execute({ userId }: IRequest): Promise<User> {
     const user = await this.usersRepository.findById(userId);
 
     if (!user) {
