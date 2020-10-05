@@ -4,6 +4,7 @@ import IAppointmentsRepositories from '@modules/appointments/repositories/IAppoi
 
 import ICreateAppointmentDTO from '@modules/appointments/dtos/ICreateAppointmentDTO';
 import IFindAllInMonthFromProviderDTO from '@modules/appointments/dtos/IFindAllInMonthFromProviderDTO';
+import IFindAllInDayFromProviderDTO from '@modules/appointments/dtos/IFindAllInDayFromProviderDTO';
 
 import Appointment from '@modules/appointments/infra/typeorm/entities/Appointment';
 
@@ -31,25 +32,47 @@ class AppointmentsRepository implements IAppointmentsRepositories {
     // and if dont, it will fill with the secondParam(zero) on left
     const parsedMonth = String(month).padStart(2, '0');
 
-    const appointmentsInMonth = await this.ormRepository.find({
+    const appointments = await this.ormRepository.find({
       where: {
         providerId,
         date: Raw(
-          dateFieldName => `
-          to_char(${dateFieldName}, 'MM-YYYY' = '${parsedMonth}-${year})
-        `,
+          dateFieldName =>
+            `to_char(${dateFieldName}, 'MM-YYYY') = '${parsedMonth}-${year}'`,
         ),
       },
     });
 
-    return appointmentsInMonth;
+    return appointments;
+  }
+
+  public async findAllInDayFromProvider({
+    providerId,
+    day,
+    month,
+    year,
+  }: IFindAllInDayFromProviderDTO): Promise<Appointment[]> {
+    const parsedMonth = String(month).padStart(2, '0');
+    const parsedDay = String(day).padStart(2, '0');
+
+    const appointments = await this.ormRepository.find({
+      where: {
+        providerId,
+        date: Raw(
+          dateFieldName =>
+            `to_char(${dateFieldName}, 'DD-MM-YYYY') = '${parsedDay}-${parsedMonth}-${year}'`,
+        ),
+      },
+    });
+
+    return appointments;
   }
 
   public async create({
     providerId,
+    userId,
     date,
   }: ICreateAppointmentDTO): Promise<Appointment> {
-    const appointment = this.ormRepository.create({ providerId, date });
+    const appointment = this.ormRepository.create({ providerId, userId, date });
 
     await this.ormRepository.save(appointment);
 
