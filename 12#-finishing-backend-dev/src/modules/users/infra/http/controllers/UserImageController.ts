@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { container } from 'tsyringe';
+import { classToClass } from 'class-transformer';
 
 import UpdateUserImageService from '@modules/users/services/UpdateUserImageService';
 
@@ -12,8 +13,6 @@ export default class UserImageController {
       imageFileName: request.file.filename,
     });
 
-    delete user.password;
-
-    return response.json(user);
+    return response.json(classToClass(user));
   }
 }
