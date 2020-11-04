@@ -14,13 +14,12 @@ const providerAppointmentsController = new ProviderAppointmentsController();
 // below will make all appointments routes run the auth middleware
 appointmentsRouter.use(ensureAuthenticated);
 
-// appointmentsRouter.post('/', appointmentsController.create);
 appointmentsRouter.post(
   '/',
   celebrate({
     [Segments.BODY]: {
       providerId: Joi.string().uuid().required(),
-      date: Joi.string(),
+      date: Joi.date().required(),
     },
   }),
   appointmentsController.create,

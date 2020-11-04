@@ -51,6 +51,7 @@ class CreateAppointmentService {
     // We search if there is any appointment in the recived hour
     const findAppointmentInSameDate = await this.appointmentsRepository.findByDate(
       appointmentDate,
+      providerId,
     );
 
     // If there is any, return
