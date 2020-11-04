@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { ChangeEvent, useCallback, useRef } from 'react';
 import { FiArrowLeft, FiMail, FiUser, FiLock, FiCamera } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import { Form } from '@unform/web';
@@ -20,7 +20,9 @@ import { useAuth } from '../../hooks/auth';
 interface ProfileFormData {
   name: string;
   email: string;
+  oldPassword: string;
   password: string;
+  passwordConfirmation: string;
 }
 
 const Profile: React.FC = () => {
@@ -28,7 +30,7 @@ const Profile: React.FC = () => {
   const { addToast } = useToast();
   const history = useHistory();
 
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   const handleSubmit = useCallback(
     async (data: ProfileFormData) => {
@@ -40,30 +42,54 @@ const Profile: React.FC = () => {
           email: Yup.string()
             .required('E-mail obrigatório')
             .email('Digite um e-mail válido'),
-          password: Yup.string().min(6, 'No mínimo 6 dígitos'),
+          oldPassword: Yup.string(),
+          password: Yup.string().when('oldPassword', {
+            is: text => !!text.length,
+            then: Yup.string().required('Campo obrigatório'),
+            otherwise: Yup.string(),
+          }),
           confirmPassword: Yup.string()
-            .oneOf([Yup.ref('password')], 'As senhas não conferem')
-            .required('As senhas não conferem'),
+            .when('oldPassword', {
+              is: text => !!text.length,
+              then: Yup.string().required('Campo obrigatório'),
+              otherwise: Yup.string(),
+            })
+            .oneOf([Yup.ref('password')], 'As senhas não conferem'),
         });
 
         await schema.validate(data, {
           abortEarly: false,
         });
 
-        const { name, email, password } = data;
-
-        await api.post('/users', {
+        const {
           name,
           email,
+          oldPassword,
           password,
-        });
+          passwordConfirmation,
+        } = data;
 
-        history.push('/');
+        const formData = {
+          name,
+          email,
+          ...(oldPassword
+            ? {
+                oldPassword,
+                password,
+                passwordConfirmation,
+              }
+            : {}),
+        };
+
+        const response = await api.put('/profile', formData);
+
+        updateUser(response.data);
+
+        history.push('/dashboard');
 
         addToast({
           type: 'success',
-          title: 'Cadastro realizado!',
-          description: 'Agora voce pode logar no AllBarber!',
+          title: 'Perfil atualizado!',
         });
       } catch (error) {
         if (error instanceof Yup.ValidationError) {
@@ -76,12 +102,32 @@ const Profile: React.FC = () => {
 
         addToast({
           type: 'error',
-          title: 'Erro no cadastro',
-          description: 'Ocorreu um erro durante o cadastro, tente novamente.',
+          title: 'Erro ao atualizar',
+          description: 'Ocorreu um erro ao atualizar, tente novamente.',
         });
       }
     },
-    [addToast, history],
+    [addToast, history, updateUser],
+  );
+
+  const handleImageChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      if (event.target.files) {
+        const data = new FormData();
+
+        data.append('user-image', event.target.files[0]);
+
+        api.patch('/users/image', data).then(response => {
+          updateUser(response.data);
+
+          addToast({
+            type: 'success',
+            title: 'Imagem de perfil atualizada!',
+          });
+        });
+      }
+    },
+    [addToast, updateUser],
   );
 
   return (
@@ -105,9 +151,12 @@ const Profile: React.FC = () => {
         >
           <AvatarInput>
             <img src={user.imageUrl} alt={user.name} />
-            <button type="button">
+
+            <label htmlFor="image">
               <FiCamera />
-            </button>
+
+              <input type="file" id="image" onChange={handleImageChange} />
+            </label>
           </AvatarInput>
 
           <h1>Meu perfil</h1>
