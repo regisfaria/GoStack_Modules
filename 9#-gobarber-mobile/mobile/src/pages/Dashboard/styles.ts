@@ -10,7 +10,7 @@ export const Container = styled.View`
 
 export const Header = styled.View`
   padding: 24px;
-  padding-top: ${getStatusBarHeight() + 2}px;
+  padding-top: ${getStatusBarHeight() + 24}px;
   background: #28262e;
 
   flex-direction: row;
@@ -30,13 +30,17 @@ export const Username = styled.Text`
   font-family: 'Roboto-Medium';
 `;
 
-export const ProfileButton = styled.TouchableOpacity``;
+export const ProfileButton = styled.TouchableOpacity`
+  margin-left: 52px;
+`;
 
 export const UserAvatar = styled.Image`
   width: 56px;
   height: 56px;
   border-radius: 28px;
 `;
+
+export const LogoutButton = styled.TouchableOpacity``;
 
 export const ProvidersList = styled(FlatList as new () => FlatList<Provider>)`
   padding: 32px 24px 16px;
